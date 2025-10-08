@@ -32,6 +32,7 @@ class CustomTextfield extends StatefulWidget {
     this.labelFontSize,
     this.textColor,
     this.inputFormatters,
+    this.textFieldHeight,
   });
 
   final String? hintText;
@@ -60,6 +61,7 @@ class CustomTextfield extends StatefulWidget {
   final double? labelFontSize;
   final Color? textColor;
   final List<TextInputFormatter>? inputFormatters;
+  final double? textFieldHeight;
 
   @override
   State<CustomTextfield> createState() => _CustomTextfieldState();
@@ -123,60 +125,63 @@ class _CustomTextfieldState extends State<CustomTextfield> {
           children: [
             Padding(
               padding: EdgeInsets.only(bottom: widget.bottomPadding ?? 15),
-              child: TextFormField(
-                readOnly: widget.readOnly ?? false,
-                controller: widget.textController,
-                validator: widget.validation,
-                maxLines: widget.maxLines ?? 1,
-                buildCounter:
-                    (
-                      context, {
-                      required currentLength,
-                      required isFocused,
-                      required maxLength,
-                    }) => null,
-                maxLength: widget.maxLength,
-                obscureText: widget.obscureText ?? false,
-                obscuringCharacter: "*",
-                keyboardType: widget.keyboardType,
-                inputFormatters: widget.inputFormatters ?? [],
-                decoration: InputDecoration(
-                  prefixIcon: widget.prefixWidget,
-                  fillColor: widget.fillColor ?? Colors.white,
-                  filled: true,
-                  suffixIcon: widget.suffixWidget,
-                  border: border,
-                  enabledBorder: border,
-                  focusedBorder: border,
-                  errorBorder: border,
-                  focusedErrorBorder: border,
-                  errorMaxLines: 3,
-                  hintText: widget.hintText ?? "",
-                  errorStyle: CommonStyle.getRalewayFont(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.red,
+              child: SizedBox(
+                height: widget.textFieldHeight,
+                child: TextFormField(
+                  readOnly: widget.readOnly ?? false,
+                  controller: widget.textController,
+                  validator: widget.validation,
+                  maxLines: widget.maxLines ?? 1,
+                  buildCounter:
+                      (
+                        context, {
+                        required currentLength,
+                        required isFocused,
+                        required maxLength,
+                      }) => null,
+                  maxLength: widget.maxLength,
+                  obscureText: widget.obscureText ?? false,
+                  obscuringCharacter: "*",
+                  keyboardType: widget.keyboardType,
+                  inputFormatters: widget.inputFormatters ?? [],
+                  decoration: InputDecoration(
+                    prefixIcon: widget.prefixWidget,
+                    fillColor: widget.fillColor ?? Colors.white,
+                    filled: true,
+                    suffixIcon: widget.suffixWidget,
+                    border: border,
+                    enabledBorder: border,
+                    focusedBorder: border,
+                    errorBorder: border,
+                    focusedErrorBorder: border,
+                    errorMaxLines: 3,
+                    hintText: widget.hintText ?? "",
+                    errorStyle: CommonStyle.getRalewayFont(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.red,
+                    ),
+                    hintStyle:
+                        widget.hintStyle ??
+                        CommonStyle.getRalewayFont(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                          color: AppColors.grey1,
+                        ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
                   ),
-                  hintStyle:
-                      widget.hintStyle ??
-                      CommonStyle.getRalewayFont(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.grey1,
-                      ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 6,
+                  style: CommonStyle.getRalewayFont(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: widget.textColor ?? Colors.black,
                   ),
+                  onTap: widget.onTap,
+                  onFieldSubmitted: widget.onSumbit,
+                  onChanged: widget.onChanged,
                 ),
-                style: CommonStyle.getRalewayFont(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: widget.textColor ?? Colors.black,
-                ),
-                onTap: widget.onTap,
-                onFieldSubmitted: widget.onSumbit,
-                onChanged: widget.onChanged,
               ),
             ),
             if (_hasText && widget.insideLableText != null)

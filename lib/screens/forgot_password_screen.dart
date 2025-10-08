@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:marine_media_enterprises/core/navigator/navigation.dart';
-import 'package:marine_media_enterprises/screens/home_screen.dart';
+import 'package:marine_media_enterprises/screens/home/home_screen.dart';
 import 'package:marine_media_enterprises/screens/reset_password_screen.dart';
 import 'package:marine_media_enterprises/utils/app_colors/app_colors.dart';
 import 'package:marine_media_enterprises/utils/local_images/local_images.dart';
@@ -49,7 +49,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   SizedBox(height: 70),
                   Center(
                     child: Text(
-                      "FORGOT PASSWORD",
+                      "Forgot Password",
                       style: CommonStyle.getRalewayFont(
                         fontSize: size.width * 0.06,
                         fontWeight: FontWeight.w400,

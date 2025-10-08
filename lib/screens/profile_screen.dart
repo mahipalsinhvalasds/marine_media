@@ -28,7 +28,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     getData();
   }
 
-  getData(){
+  getData() {
     nameController.text = "Paul";
     surNameController.text = "Ricardo";
     dateOfBirthController.text = "01/06/1996";
@@ -39,199 +39,109 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: AppColors.backgroundColor,
-      drawer: DrawerScreen(),
-      appBar: AppBar(
-        elevation: 0,
-        scrolledUnderElevation: 0,
+    final size = MediaQuery.of(context).size;
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: AppColors.backgroundColor,
-        leading: GestureDetector(
-          onTap: () {
-            _scaffoldKey.currentState?.openDrawer();
-          },
-          child: Icon(Icons.menu, color: Colors.white),
-        ),
-        title: Text(
-          "My Profile",
-          style: CommonStyle.getRalewayFont(
-            fontSize: 22,
-            fontWeight: FontWeight.w500,
+        drawer: DrawerScreen(),
+        appBar: AppBar(
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          backgroundColor: AppColors.backgroundColor,
+          leading: GestureDetector(
+            onTap: () {
+              _scaffoldKey.currentState?.openDrawer();
+            },
+            child: Icon(Icons.menu, color: Colors.white, size: 30),
           ),
+          title: Text(
+            "My Profile",
+            style: CommonStyle.getRalewayFont(
+              fontSize: 22,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          centerTitle: true,
         ),
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 25),
-        child: Column(
+        body: Column(
           children: [
-            SizedBox(height: 50),
-            Center(child: Image.asset(LocalImages.userImage, height: 80)),
-            SizedBox(height: 50),
-            Container(
-              height: 50,
-              color: AppColors.backgroundColor,
-              child: Text(
-                "ricardo.paul@gmail.com",
-                style: CommonStyle.getRalewayFont(),
+            SizedBox(height: 10),
+            Image.asset(LocalImages.logo, scale: 4),
+            SizedBox(height: 15),
+            Center(child: Image.asset(LocalImages.userImage, height: 100)),
+            SizedBox(height: 18),
+            Text(
+              "ricardo.paul@gmail.com",
+              style: CommonStyle.getRalewayFont(
+                fontSize: size.width * 0.05,
+                fontWeight: FontWeight.w600,
               ),
             ),
+            SizedBox(height: 20),
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    Container(
-                      height: 96,
-                      color: Colors.white,
-                      margin: EdgeInsets.only(bottom: 10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 14, top: 10),
-                            child: Text(
-                              "Name",
-                              style: CommonStyle.getRalewayFont(
-                                color: Colors.black,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          CustomTextfield(
-                            textController: nameController,
-                            hintText: "Name",
-                          ),
-                        ],
-                      ),
+              child: Stack(
+                children: [
+                  Image.asset(
+                    LocalImages.backgroundImage2,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 25),
+                    child: Column(
+                      children: [
+                        SizedBox(height: 20),
+                        buildProfileField("Name", nameController),
+                        buildProfileField("Surname", surNameController),
+                        buildProfileField(
+                          "Date of Birth",
+                          dateOfBirthController,
+                        ),
+                        buildProfileField("Vessel Name", vesselNameController),
+                        buildProfileField("Email Address", emailController),
+                        buildProfileField("Mobile Number", mobileController),
+                        SizedBox(height: 50),
+                      ],
                     ),
-                    Container(
-                      height: 96,
-                      color: Colors.white,
-                      margin: EdgeInsets.only(bottom: 10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 14, top: 10),
-                            child: Text(
-                              "Surname",
-                              style: CommonStyle.getRalewayFont(
-                                color: Colors.black,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          CustomTextfield(
-                            textController: surNameController,
-                            hintText: "Surname",
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      height: 96,
-                      color: Colors.white,
-                      margin: EdgeInsets.only(bottom: 10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 14, top: 10),
-                            child: Text(
-                              "Date of Birth",
-                              style: CommonStyle.getRalewayFont(
-                                color: Colors.black,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          CustomTextfield(
-                            textController: dateOfBirthController,
-                            hintText: "Date of Birth",
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      height: 96,
-                      color: Colors.white,
-                      margin: EdgeInsets.only(bottom: 10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 14, top: 10),
-                            child: Text(
-                              "Vessel Name",
-                              style: CommonStyle.getRalewayFont(
-                                color: Colors.black,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          CustomTextfield(
-                            textController: vesselNameController,
-                            hintText: "Vessel Name",
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      height: 96,
-                      color: Colors.white,
-                      margin: EdgeInsets.only(bottom: 10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 14, top: 10),
-                            child: Text(
-                              "Email Address",
-                              style: CommonStyle.getRalewayFont(
-                                color: Colors.black,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          CustomTextfield(
-                            textController: emailController,
-                            hintText: "Email Address",
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      height: 96,
-                      color: Colors.white,
-                      margin: EdgeInsets.only(bottom: 10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 14, top: 10),
-                            child: Text(
-                              "Mobile Number",
-                              style: CommonStyle.getRalewayFont(
-                                color: Colors.black,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          CustomTextfield(
-                            textController: mobileController,
-                            hintText: "Mobile Number",
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 50),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget buildProfileField(String label, TextEditingController controller) {
+    return Container(
+      height: 70,
+      color: Colors.white,
+      margin: EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 14, top: 10),
+            child: Text(
+              label,
+              style: CommonStyle.getRalewayFont(
+                color: Colors.black,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          CustomTextfield(
+            textController: controller,
+            hintText: label,
+            textFieldHeight: 22,
+          ),
+        ],
       ),
     );
   }
