@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:marine_media_enterprises/core/navigator/navigation.dart';
-import 'package:marine_media_enterprises/screens/login_screen.dart';
+import 'package:marine_media_enterprises/screens/login/login_screen.dart';
 import 'package:marine_media_enterprises/utils/app_colors/app_colors.dart';
 import 'package:marine_media_enterprises/utils/app_strings/app_strings.dart';
 import 'package:marine_media_enterprises/utils/local_images/local_images.dart';
@@ -39,8 +39,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   child: Text(
                     "Welcome To\nMerinemediaenterprises.com",
                     style: CommonStyle.getRalewayFont(
-                      height: 2,
-                      fontSize: size.width * 0.05,
+                      fontSize: size.width * 0.07,
                       fontWeight: FontWeight.w600,
                     ),
                     textAlign: TextAlign.center,

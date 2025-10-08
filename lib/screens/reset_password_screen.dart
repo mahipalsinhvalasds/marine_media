@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:marine_media_enterprises/core/navigator/navigation.dart';
-import 'package:marine_media_enterprises/screens/login_screen.dart';
+import 'package:marine_media_enterprises/screens/login/login_screen.dart';
 import 'package:marine_media_enterprises/utils/app_colors/app_colors.dart';
 import 'package:marine_media_enterprises/utils/local_images/local_images.dart';
 import 'package:marine_media_enterprises/utils/text_style/text_style.dart';

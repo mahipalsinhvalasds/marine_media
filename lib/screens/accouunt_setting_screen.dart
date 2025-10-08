@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:marine_media_enterprises/core/navigator/navigation.dart';
+import 'package:marine_media_enterprises/screens/create_new_password_screen.dart';
 import 'package:marine_media_enterprises/utils/app_colors/app_colors.dart';
 import 'package:marine_media_enterprises/utils/local_images/local_images.dart';
 import 'package:marine_media_enterprises/utils/text_style/text_style.dart';
@@ -45,24 +46,29 @@ class _AccouuntSettingScreenState extends State<AccouuntSettingScreen> {
                   SizedBox(height: 20),
                   Center(child: Image.asset(LocalImages.logo,color: AppColors.grey,scale: 4,)),
                   SizedBox(height: 40),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 20,vertical: 16),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: Colors.white,
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          "Change Password",
-                          style: CommonStyle.getRalewayFont(
-                            color: Colors.black,
-                            fontSize: 16
+                  GestureDetector(
+                    onTap: (){
+                      Navigation.push(context, CreateNewPasswordScreen());
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 20,vertical: 16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.white,
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            "Change Password",
+                            style: CommonStyle.getRalewayFont(
+                              color: Colors.black,
+                              fontSize: 16
+                            ),
                           ),
-                        ),
-                        Spacer(),
-                        Icon((Icons.keyboard_arrow_right_rounded)),
-                      ],
+                          Spacer(),
+                          Icon((Icons.keyboard_arrow_right_rounded)),
+                        ],
+                      ),
                     ),
                   ),
                   SizedBox(height: 32),
