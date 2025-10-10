@@ -256,23 +256,29 @@ class _MyTrainingScreenState extends State<MyTrainingScreen> {
                                                   value: 'remove',
                                                   padding: EdgeInsets.zero,
                                                   height: 30,
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons.delete_outline,
-                                                        color: Colors.black,
-                                                        size: 22,
-                                                      ),
-                                                      SizedBox(width: 12),
-                                                      Text(
-                                                        'Remove',
-                                                        style: CommonStyle.getRalewayFont(
+                                                  child: GestureDetector(
+                                                    onTap: (){
+                                                      Navigation.pop(context);
+                                                      mViewModel?.deleteMyTraining(onGoing?.id ?? 0);
+                                                    },
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.delete_outline,
                                                           color: Colors.black,
-                                                          fontSize: 16,
-                                                          fontWeight: FontWeight.w300,
+                                                          size: 22,
                                                         ),
-                                                      ),
-                                                    ],
+                                                        SizedBox(width: 12),
+                                                        Text(
+                                                          'Remove',
+                                                          style: CommonStyle.getRalewayFont(
+                                                            color: Colors.black,
+                                                            fontSize: 16,
+                                                            fontWeight: FontWeight.w300,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ),
                                               ],

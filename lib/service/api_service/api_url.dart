@@ -8,4 +8,7 @@ class ApiUrl {
   static const String getTraining = "api/videoList";
   static const String addTraining = "api/addVideo";
   static const String getMyTraining = "api/uploadVideoList";
+  static const String deleteMyTraining = "api/delVideo";
+  static const String questionList = "api/quizList";
+  static const String submitQuiz = "api/submitQuiz";
 }

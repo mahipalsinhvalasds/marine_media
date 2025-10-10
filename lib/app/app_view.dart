@@ -4,6 +4,7 @@ import 'package:marine_media_enterprises/screens/add_to_training/add_training_vi
 import 'package:marine_media_enterprises/screens/home/home_view_model.dart';
 import 'package:marine_media_enterprises/screens/login/login_view_model.dart';
 import 'package:marine_media_enterprises/screens/my_training/my_training_view_model.dart';
+import 'package:marine_media_enterprises/screens/quiz_question/quiz_question_view_model.dart';
 import 'package:marine_media_enterprises/screens/splash_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -52,6 +53,9 @@ class _AppViewState extends State<AppView> with WidgetsBindingObserver {
               ),
               ChangeNotifierProvider<MyTrainingViewModel>(
                 create: (_) => MyTrainingViewModel(),
+              ),
+              ChangeNotifierProvider<QuizQuestionViewModel>(
+                create: (_) => QuizQuestionViewModel(),
               ),
             ],
             child: MaterialApp(

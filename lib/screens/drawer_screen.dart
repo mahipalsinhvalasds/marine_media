@@ -8,10 +8,9 @@ import 'package:marine_media_enterprises/screens/login/login_screen.dart';
 import 'package:marine_media_enterprises/screens/my_training/my_training_screen.dart';
 import 'package:marine_media_enterprises/screens/privacy_policy_screen.dart';
 import 'package:marine_media_enterprises/screens/profile_screen.dart';
-import 'package:marine_media_enterprises/screens/signup_screen.dart';
 import 'package:marine_media_enterprises/screens/term_condition_screen.dart';
+import 'package:marine_media_enterprises/service/download_manager.dart';
 import 'package:marine_media_enterprises/utils/app_colors/app_colors.dart';
-import 'package:marine_media_enterprises/utils/app_strings/app_strings.dart';
 import 'package:marine_media_enterprises/utils/local_images/local_images.dart';
 import 'package:marine_media_enterprises/utils/text_style/text_style.dart';
 
@@ -24,6 +23,8 @@ class DrawerScreen extends StatefulWidget {
 
 class _DrawerScreenState extends State<DrawerScreen> {
   AppPreferences appPreferences = AppPreferences();
+  final DownloadManager _downloadManager = DownloadManager();
+  
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -69,7 +70,12 @@ class _DrawerScreenState extends State<DrawerScreen> {
                       Navigation.push(context, AccouuntSettingScreen());
                     }),
                     commonTile("Download", () {
-                      Navigation.push(context, DownloadScreen());
+                      Navigation.push(
+                        context,
+                        DownloadScreen(
+                          downloadedVideos: _downloadManager.downloadedVideos,
+                        ),
+                      );
                     }),
                     commonTile("Term & Condition", () {
                       Navigation.push(context, TermConditionScreen());
@@ -105,8 +111,8 @@ class _DrawerScreenState extends State<DrawerScreen> {
           child: Text(
             text,
             style: CommonStyle.getRalewayFont(
-              fontSize: 20,
-              fontWeight: FontWeight.w400,
+              fontSize: 22,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),

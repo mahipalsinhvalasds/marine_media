@@ -6,7 +6,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:marine_media_enterprises/core/database/app_preferences.dart';
 import 'package:marine_media_enterprises/core/navigator/navigation.dart';
 import 'package:marine_media_enterprises/screens/add_to_training/add_training_api.dart';
-import 'package:marine_media_enterprises/screens/add_to_training/model.dart';
+import 'package:marine_media_enterprises/screens/add_to_training/common_model.dart';
 import 'package:marine_media_enterprises/screens/home/home_screen.dart';
 import 'package:marine_media_enterprises/service/api_service/api_paramater.dart';
 import 'package:marine_media_enterprises/service/api_service/api_service.dart';
@@ -39,7 +39,7 @@ class AddTrainingApiViewModel with ChangeNotifier {
         ApiParameters.categoryId: categoryId,
         ApiParameters.videoId: videoId,
       };
-      Model response = await api!.addTraining(ApiUrl.addTraining, body);
+      CommonModel response = await api!.addTraining(ApiUrl.addTraining, body);
 
       if (response.status == true) {
         Navigation.removeAllPreviousAndPush(context!, HomeScreen());
