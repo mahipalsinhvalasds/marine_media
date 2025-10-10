@@ -1,10 +1,10 @@
-class Model {
+class CommonModel {
   bool? status;
   String? message;
 
-  Model({this.status, this.message});
+  CommonModel({this.status, this.message});
 
-  Model.fromJson(Map<String, dynamic> json) {
+  CommonModel.fromJson(Map<String, dynamic> json) {
     status = json['status'];
     message = json['message'];
   }

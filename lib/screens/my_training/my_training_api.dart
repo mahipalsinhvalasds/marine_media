@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:marine_media_enterprises/screens/add_to_training/common_model.dart';
 import 'package:marine_media_enterprises/screens/my_training/my_training_model.dart';
 import 'package:marine_media_enterprises/service/api_service/api_service.dart';
 
@@ -12,5 +13,10 @@ class MyTrainingApi{
   Future<MyTrainingModel> getMyTraining(url) async {
     var response = await apiClient.get(url);
     return MyTrainingModel.fromJson(json.decode(response.body));
+  }
+
+  Future<CommonModel> deleteMyTraining(url) async {
+    var response = await apiClient.get(url);
+    return CommonModel.fromJson(json.decode(response.body));
   }
 }
