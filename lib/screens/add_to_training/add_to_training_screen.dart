@@ -55,9 +55,9 @@ class _AddToTrainingScreenState extends State<AddToTrainingScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 2),
+                // SizedBox(height: 0),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
                     children: [
                       Center(child: Image.asset(LocalImages.logo, scale: 4)),
@@ -67,13 +67,14 @@ class _AddToTrainingScreenState extends State<AddToTrainingScreen> {
                         style: CommonStyle.getRalewayFont(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
+                          height: 2,
                         ),
                       ),
-                      SizedBox(height: 14),
+                      SizedBox(height: 22),
                       Text(
                         widget.video?.description ?? "",
                         style: CommonStyle.getRalewayFont(
-                          height: 2.3,
+                          height: 2,
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
@@ -175,7 +176,7 @@ class _AddToTrainingScreenState extends State<AddToTrainingScreen> {
         child: CustomButton(
           text: "Add to My Training",
           fontWeight: FontWeight.w400,
-          fontSize: 14,
+          fontSize: 12,
           loading: mViewModel?.loading ?? false,
           onTap: (){
             if(widget.video?.categoryId != null && widget.video?.id != null){

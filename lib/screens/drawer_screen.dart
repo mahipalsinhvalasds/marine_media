@@ -6,9 +6,9 @@ import 'package:marine_media_enterprises/screens/download_screen.dart';
 import 'package:marine_media_enterprises/screens/home/home_screen.dart';
 import 'package:marine_media_enterprises/screens/login/login_screen.dart';
 import 'package:marine_media_enterprises/screens/my_training/my_training_screen.dart';
-import 'package:marine_media_enterprises/screens/privacy_policy_screen.dart';
+import 'package:marine_media_enterprises/screens/privacy_policy/privacy_policy_screen.dart';
 import 'package:marine_media_enterprises/screens/profile_screen.dart';
-import 'package:marine_media_enterprises/screens/term_condition_screen.dart';
+import 'package:marine_media_enterprises/screens/term_condition/term_condition_screen.dart';
 import 'package:marine_media_enterprises/service/download_manager.dart';
 import 'package:marine_media_enterprises/utils/app_colors/app_colors.dart';
 import 'package:marine_media_enterprises/utils/local_images/local_images.dart';
@@ -52,6 +52,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                   ),
                 ),
               ),
+              SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(

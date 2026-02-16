@@ -56,28 +56,28 @@ class User {
   String? birthday;
   String? gender;
   String? email;
-  Null? tempPassword;
+  String? tempPassword;
   String? address;
   String? number;
   String? city;
   String? zIP;
   String? profilePhoto;
   String? coverPhoto;
-  Null? emailVerifiedAt;
+  String? emailVerifiedAt;
   String? resetToken;
   int? companyVerified;
   int? sendLoginDetails;
   int? companyEnable;
   String? createdAt;
   String? updatedAt;
-  Null? companyName;
-  Null? seafarerNumber;
-  Null? rank;
+  String? companyName;
+  String? seafarerNumber;
+  String? rank;
   String? nationality;
   String? role;
   String? vesselName;
-  Null? position;
-  Null? country;
+  String? position;
+  String? country;
 
   User(
       {this.id,

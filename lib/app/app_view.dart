@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:marine_media_enterprises/app/app_view_model.dart';
 import 'package:marine_media_enterprises/screens/add_to_training/add_training_view_model.dart';
+import 'package:marine_media_enterprises/screens/change_password/change_password_view_model.dart';
+import 'package:marine_media_enterprises/screens/forgot_password/forgot_password_view_model.dart';
 import 'package:marine_media_enterprises/screens/home/home_view_model.dart';
 import 'package:marine_media_enterprises/screens/login/login_view_model.dart';
 import 'package:marine_media_enterprises/screens/my_training/my_training_view_model.dart';
+import 'package:marine_media_enterprises/screens/privacy_policy/privacy_policy_view_model.dart';
 import 'package:marine_media_enterprises/screens/quiz_question/quiz_question_view_model.dart';
 import 'package:marine_media_enterprises/screens/splash_screen.dart';
+import 'package:marine_media_enterprises/screens/term_condition/term_condition_view_model.dart';
 import 'package:provider/provider.dart';
 
 class AppView extends StatefulWidget {
@@ -57,13 +61,25 @@ class _AppViewState extends State<AppView> with WidgetsBindingObserver {
               ChangeNotifierProvider<QuizQuestionViewModel>(
                 create: (_) => QuizQuestionViewModel(),
               ),
+              ChangeNotifierProvider<PrivacyPolicyViewModel>(
+                create: (_) => PrivacyPolicyViewModel(),
+              ),
+              ChangeNotifierProvider<TermConditionViewModel>(
+                create: (_) => TermConditionViewModel(),
+              ),
+              ChangeNotifierProvider<ChangePasswordViewModel>(
+                create: (_) => ChangePasswordViewModel(),
+              ),
+              ChangeNotifierProvider<ForgotPasswordViewModel>(
+                create: (_) => ForgotPasswordViewModel(),
+              ),
             ],
             child: MaterialApp(
               scrollBehavior: const ScrollBehavior().copyWith(
                 overscroll: false,
               ),
               debugShowCheckedModeBanner: false,
-              title: "marine media",
+              title: "Marine Media Enterprises",
               locale: value.locale,
               builder: (BuildContext context, Widget? child) {
                 final MediaQueryData data = MediaQuery.of(context);

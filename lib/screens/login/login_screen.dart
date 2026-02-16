@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:marine_media_enterprises/core/navigator/navigation.dart';
-import 'package:marine_media_enterprises/screens/forgot_password_screen.dart';
+import 'package:marine_media_enterprises/screens/forgot_password/forgot_password_screen.dart';
 import 'package:marine_media_enterprises/screens/home/home_screen.dart';
 import 'package:marine_media_enterprises/screens/login/login_view_model.dart';
 import 'package:marine_media_enterprises/utils/app_colors/app_colors.dart';
@@ -45,10 +45,32 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Stack(
         children: [
           Image.asset(
-            LocalImages.backgroundImage,
+            LocalImages.splashBackgroundGif,
             fit: BoxFit.cover,
             height: MediaQuery.of(context).size.height,
             width: double.infinity,
+          ),
+          Container(
+            height: double.infinity,
+            width: double.infinity,
+            color: AppColors.backgroundColor.withOpacity(0.65),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.65,
+              decoration:  BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    AppColors.backgroundColor.withOpacity(0.0),
+                    AppColors.backgroundColor,
+                    AppColors.backgroundColor,
+                  ],
+                ),
+              ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 25),
@@ -65,8 +87,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Text(
                         "SIGN IN",
                         style: CommonStyle.getRalewayFont(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w400,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -85,6 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     CustomTextfield(
                       textController: passwordController,
                       hintText: "Password",
+                      obscureText: !showPassword,
                       suffixWidget: GestureDetector(
                         onTap: () {
                           setState(() {
@@ -119,6 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Text(
                         "Forgot Your Password?",
                         style: CommonStyle.getRalewayFont(
+                          fontSize: 18,
                           fontWeight: FontWeight.w400,
                         ),
                       ),

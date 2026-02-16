@@ -4,6 +4,7 @@ import 'package:marine_media_enterprises/screens/quiz_question/quiz_question_api
 import 'package:marine_media_enterprises/screens/quiz_question/quiz_question_model.dart';
 import 'package:marine_media_enterprises/service/api_service/api_service.dart';
 import 'package:marine_media_enterprises/service/api_service/api_url.dart';
+import 'package:marine_media_enterprises/utils/common_methods/common_methods.dart';
 
 class QuizQuestionViewModel with ChangeNotifier {
   BuildContext? context;
@@ -73,17 +74,26 @@ class QuizQuestionViewModel with ChangeNotifier {
       QuizQuestionModel response = await api!.submitQuiz(ApiUrl.submitQuiz, body);
 
       if (response.status == true) {
-        Fluttertoast.showToast(msg: "Quiz submitted successfully!");
+        CommonMethods.showCustomSnackBar(
+          context: context!,
+          text: "Quiz submitted successfully!",
+        );
         quizQuestionModel = response;
         notifyListeners();
         return true;
       } else {
-        Fluttertoast.showToast(msg: "Failed to submit quiz");
+        CommonMethods.showCustomSnackBar(
+          context: context!,
+          text: "Failed to submit quiz",
+        );
         return false;
       }
     } catch (e) {
       print(e);
-      Fluttertoast.showToast(msg: "Error: ${e.toString()}");
+      CommonMethods.showCustomSnackBar(
+        context: context!,
+        text: "Error: ${e.toString()}",
+      );
       return false;
     } finally {
       setLoading(false);

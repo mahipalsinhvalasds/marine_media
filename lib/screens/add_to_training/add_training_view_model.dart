@@ -11,6 +11,7 @@ import 'package:marine_media_enterprises/screens/home/home_screen.dart';
 import 'package:marine_media_enterprises/service/api_service/api_paramater.dart';
 import 'package:marine_media_enterprises/service/api_service/api_service.dart';
 import 'package:marine_media_enterprises/service/api_service/api_url.dart';
+import 'package:marine_media_enterprises/utils/common_methods/common_methods.dart';
 
 
 class AddTrainingApiViewModel with ChangeNotifier {
@@ -43,26 +44,42 @@ class AddTrainingApiViewModel with ChangeNotifier {
 
       if (response.status == true) {
         Navigation.removeAllPreviousAndPush(context!, HomeScreen());
-        Fluttertoast.showToast(msg: response.message ?? "video added successfully");
+        CommonMethods.showCustomSnackBar(
+          context: context!,
+          text: response.message ?? "video added successfully",
+        );
         return true;
       } else {
-        Fluttertoast.showToast(msg: response.message  ?? "Failed to add video");
+        CommonMethods.showCustomSnackBar(
+          context: context!,
+          text: response.message  ?? "Failed to add video",
+        );
         return false;
       }
     } on SocketException {
-      Fluttertoast.showToast(
-          msg:
-          "No Internet connection. Please check your Wi-Fi or mobile data.");
+      CommonMethods.showCustomSnackBar(
+        context: context!,
+        text: "No Internet connection. Please check your Wi-Fi or mobile data.",
+      );
       return false;
     } on TimeoutException {
-      Fluttertoast.showToast(msg: "Connection timed out. Try again later.");
+      CommonMethods.showCustomSnackBar(
+        context: context!,
+        text: "Connection timed out. Try again later.",
+      );
       return false;
     } on FormatException {
-      Fluttertoast.showToast(msg: "Bad response format from server.");
+      CommonMethods.showCustomSnackBar(
+        context: context!,
+        text: "Bad response format from server.",
+      );
       return false;
     } catch (e) {
       print(e);
-      Fluttertoast.showToast(msg: "error : ${e.toString()}");
+      CommonMethods.showCustomSnackBar(
+        context: context!,
+        text: "error : ${e.toString()}",
+      );
       return false;
     } finally {
       setLoading(false);

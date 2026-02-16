@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -6,7 +10,10 @@ import 'package:marine_media_enterprises/screens/download_screen.dart';
 import 'package:marine_media_enterprises/screens/drawer_screen.dart';
 import 'package:marine_media_enterprises/service/download_manager.dart';
 import 'package:marine_media_enterprises/utils/app_colors/app_colors.dart';
+import 'package:marine_media_enterprises/utils/common_methods/common_methods.dart';
 import 'package:marine_media_enterprises/widget/custom_button.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:video_player/video_player.dart';
 import 'package:marine_media_enterprises/utils/local_images/local_images.dart';
 import 'package:marine_media_enterprises/utils/text_style/text_style.dart';
@@ -66,7 +73,6 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
     await _downloadManager.initialize();
     if (mounted) {
       setState(() {
-        // Refresh UI after loading downloads
       });
     }
   }
@@ -78,32 +84,36 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
         _errorMessage = null;
       });
 
-      String videoUrl = widget.video?.video ?? 'assets/video/marineMedia.mp4';
+      final localPath = widget.video?.localPath;
+      final videoUrl = widget.video?.video;
 
-      if (videoUrl.startsWith('http')) {
-        _videoController = VideoPlayerController.networkUrl(
-          Uri.parse(videoUrl),
-        );
+      if (localPath != null && File(localPath).existsSync()) {
+        _videoController = VideoPlayerController.file(File(localPath));
+      } else if (videoUrl != null && videoUrl.isNotEmpty) {
+        _videoController =
+            VideoPlayerController.networkUrl(Uri.parse(videoUrl));
       } else {
-        _videoController = VideoPlayerController.asset(videoUrl);
+        throw Exception('Video source not found');
       }
 
       await _videoController!.initialize();
 
       _videoController!.addListener(() {
-        if (mounted) {
-          setState(() {});
-          if (!_hasNavigatedToQuiz &&
-              _videoController!.value.isPlaying &&
-              _videoController!.value.position >= _videoController!.value.duration - Duration(milliseconds: 500) &&
-              _videoController!.value.duration.inMilliseconds > 0) {
-            _onVideoCompleted();
-          }
+        if (!mounted) return;
+
+        setState(() {});
+        _fullScreenRebuilder?.call();
+
+        if (!_hasNavigatedToQuiz &&
+            _videoController!.value.isInitialized &&
+            _videoController!.value.position >=
+                _videoController!.value.duration &&
+            _videoController!.value.duration.inMilliseconds > 0) {
+          _onVideoCompleted();
         }
       });
 
       _initializeSubtitles();
-
       _loadSubtitleContent();
 
       setState(() {
@@ -112,35 +122,49 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to load video: ${e.toString()}';
+        _errorMessage = 'Failed to load video';
         _isLoading = false;
       });
-      print('Video initialization error: $e');
     }
   }
 
+
   void _initializeSubtitles() {
-    if (widget.video?.videoSubtitle != null &&
+    if (widget.video?.localSubtitlePath != null &&
+        widget.video!.localSubtitlePath!.isNotEmpty) {
+      _subtitleUrl = widget.video!.localSubtitlePath;
+      _subtitleLanguage = widget.video!.videoSubtitle?.first.audioType;
+    } else if (widget.video?.videoSubtitle != null &&
         widget.video!.videoSubtitle!.isNotEmpty) {
       _subtitleUrl = widget.video!.videoSubtitle!.first.filePath;
       _subtitleLanguage = widget.video!.videoSubtitle!.first.audioType;
     }
   }
 
+
   void _loadSubtitleContent() async {
-    if (_subtitleUrl != null && _showSubtitles) {
-      try {
-        final response = await http.get(Uri.parse(_subtitleUrl!));
-        if (response.statusCode == 200) {
-          _subtitleCues = _parseVTT(response.body);
-          _startSubtitleSync();
-          print('Loaded ${_subtitleCues.length} subtitle cues');
-        }
-      } catch (e) {
-        print('Error loading subtitles: $e');
+    if (_subtitleUrl == null || !_showSubtitles) return;
+
+    try {
+      if (_subtitleUrl!.endsWith('.vtt') &&
+          File(_subtitleUrl!).existsSync()) {
+        final content = await File(_subtitleUrl!).readAsString();
+        _subtitleCues = _parseVTT(content);
+        _startSubtitleSync();
+        return;
       }
+
+      final response = await http.get(Uri.parse(_subtitleUrl!));
+      if (response.statusCode == 200) {
+        _subtitleCues = _parseVTT(response.body);
+        _startSubtitleSync();
+      }
+    } catch (e) {
+      debugPrint('Subtitle load failed: $e');
     }
   }
+
+
 
   List<SubtitleCue> _parseVTT(String vttContent) {
     List<SubtitleCue> cues = [];
@@ -249,6 +273,7 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
         });
       }
     });
+    _fullScreenRebuilder?.call();
   }
 
   void _toggleMute() {
@@ -275,6 +300,7 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
     setState(() {
       _showControls = !_showControls;
     });
+    _fullScreenRebuilder?.call();
   }
 
   void _toggleFullScreen() {
@@ -327,73 +353,137 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
     });
   }
 
-  void _skipForward() async {
-    print('Skip forward triggered');
-    if (_videoController != null && _videoController!.value.isInitialized) {
-      final currentPosition = _videoController!.value.position;
-      final duration = _videoController!.value.duration;
-      final newPosition = currentPosition + Duration(seconds: 10);
+  // void _skipForward() async {
+  //   print('Skip forward triggered');
+  //   if (_videoController != null && _videoController!.value.isInitialized) {
+  //     final currentPosition = _videoController!.value.position;
+  //     final duration = _videoController!.value.duration;
+  //     final newPosition = currentPosition + Duration(seconds: 10);
+  //
+  //     setState(() {
+  //       _showRightSkip = true;
+  //     });
+  //     _fullScreenRebuilder?.call();
+  //
+  //     try {
+  //       if (newPosition <= duration) {
+  //         await _videoController!.seekTo(newPosition);
+  //         print('Skipped forward to: ${newPosition.inSeconds}s');
+  //       } else {
+  //         await _videoController!.seekTo(duration);
+  //         print('Skipped to end: ${duration.inSeconds}s');
+  //       }
+  //     } catch (e) {
+  //       print('Error skipping forward: $e');
+  //     }
+  //
+  //     Future.delayed(Duration(milliseconds: 1200), () {
+  //       if (mounted) {
+  //         setState(() {
+  //           _showRightSkip = false;
+  //         });
+  //         _fullScreenRebuilder?.call();
+  //       }
+  //     });
+  //   } else {
+  //     print('Video controller not ready for skip forward');
+  //   }
+  // }
+  //
+  // void _skipBackward() async {
+  //   print('Skip backward triggered');
+  //   if (_videoController != null && _videoController!.value.isInitialized) {
+  //     final currentPosition = _videoController!.value.position;
+  //     final newPosition = currentPosition - Duration(seconds: 10);
+  //
+  //     setState(() {
+  //       _showLeftSkip = true;
+  //     });
+  //     _fullScreenRebuilder?.call();
+  //
+  //     try {
+  //       if (newPosition >= Duration.zero) {
+  //         await _videoController!.seekTo(newPosition);
+  //         print('Skipped backward to: ${newPosition.inSeconds}s');
+  //       } else {
+  //         await _videoController!.seekTo(Duration.zero);
+  //         print('Skipped to start: 0s');
+  //       }
+  //     } catch (e) {
+  //       print('Error skipping backward: $e');
+  //     }
+  //
+  //     Future.delayed(Duration(milliseconds: 1200), () {
+  //       if (mounted) {
+  //         setState(() {
+  //           _showLeftSkip = false;
+  //         });
+  //         _fullScreenRebuilder?.call();
+  //       }
+  //     });
+  //   } else {
+  //     print('Video controller not ready for skip backward');
+  //   }
+  // }
 
-      setState(() {
-        _showRightSkip = true;
-      });
-
-      try {
-        if (newPosition <= duration) {
-          await _videoController!.seekTo(newPosition);
-          print('Skipped forward to: ${newPosition.inSeconds}s');
-        } else {
-          await _videoController!.seekTo(duration);
-          print('Skipped to end: ${duration.inSeconds}s');
-        }
-      } catch (e) {
-        print('Error skipping forward: $e');
-      }
-
-      Future.delayed(Duration(milliseconds: 1200), () {
-        if (mounted) {
-          setState(() {
-            _showRightSkip = false;
-          });
-        }
-      });
-    } else {
-      print('Video controller not ready for skip forward');
-    }
-  }
-
-  void _skipBackward() async {
-    print('Skip backward triggered');
-    if (_videoController != null && _videoController!.value.isInitialized) {
-      final currentPosition = _videoController!.value.position;
-      final newPosition = currentPosition - Duration(seconds: 10);
-
-      setState(() {
-        _showLeftSkip = true;
-      });
-
-      try {
-        if (newPosition >= Duration.zero) {
-          await _videoController!.seekTo(newPosition);
-          print('Skipped backward to: ${newPosition.inSeconds}s');
-        } else {
-          await _videoController!.seekTo(Duration.zero);
-          print('Skipped to start: 0s');
-        }
-      } catch (e) {
-        print('Error skipping backward: $e');
-      }
-
-      Future.delayed(Duration(milliseconds: 1200), () {
-        if (mounted) {
-          setState(() {
-            _showLeftSkip = false;
-          });
-        }
-      });
-    } else {
-      print('Video controller not ready for skip backward');
-    }
+  void _showDownloadLimitDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Center(
+          child: Container(
+            height: 260,
+            margin: EdgeInsets.symmetric(horizontal: 30),
+            padding:
+            EdgeInsets.symmetric(horizontal: 20) +
+                EdgeInsets.only(top: 20, bottom: 0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(2),
+              color: Colors.white,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Important message',
+                  style: CommonStyle.getRalewayFont(
+                    fontSize: 22,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'The limit of 3 video downloads has been reached. Please delete a previously downloaded video.',
+                  style: CommonStyle.getRalewayFont(
+                    fontSize: 20,
+                    color: Colors.black38,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  textAlign: TextAlign.start,
+                ),
+                SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigation.pop(context);
+                    },
+                    child: Text(
+                      'CANCEL',
+                      style: CommonStyle.getRalewayFont(
+                        fontSize: 16,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _downloadVideo() async {
@@ -406,35 +496,115 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
       );
       return;
     }
+
     if (_downloadManager.isDownloaded(widget.video!.id)) {
-      Fluttertoast.showToast(msg: "Video already downloaded");
+      _deleteDownloadedVideo(widget.video!);
       return;
     }
-    setState(() {
-      _isDownloading = true;
-      _downloadProgress = 0.0;
-    });
 
-    for (int i = 0; i <= 100; i += 2) {
-      await Future.delayed(Duration(milliseconds: 40));
-      if (mounted) {
-        setState(() {
-          _downloadProgress = i / 100;
-        });
-      }
+    if (_downloadManager.downloadCount >= 3) {
+      _showDownloadLimitDialog();
+      return;
     }
 
-    bool added = await _downloadManager.addDownload(widget.video!);
+    bool hasPermission = await checkStoragePermission();
 
-    setState(() {
-      _isDownloading = false;
-      _downloadProgress = 0.0;
-    });
+    if (!hasPermission) {
+      permissionDialog();
+      return;
+    }
 
-    if (added) {
-      Fluttertoast.showToast(msg: "Video downloaded successfully");
+    _startDownload();
+  }
+
+
+  Future<void> _startDownload() async {
+    try {
+      setState(() {
+        _isDownloading = true;
+        _downloadProgress = 0.0;
+      });
+
+      final dir = await getApplicationDocumentsDirectory();
+
+      final videoPath = '${dir.path}/${widget.video!.id}.mp4';
+
+      final dio = Dio(
+        BaseOptions(
+          connectTimeout: const Duration(seconds: 15),
+          receiveTimeout: const Duration(minutes: 10),
+          responseType: ResponseType.stream,
+        ),
+      );
+
+      final videoResponse = await dio.get<ResponseBody>(
+        widget.video!.video!,
+        options: Options(responseType: ResponseType.stream),
+      );
+
+      final videoFile = File(videoPath);
+      final videoSink = videoFile.openWrite();
+
+      final total = int.tryParse(
+        videoResponse.headers.value('content-length') ?? '0',
+      ) ??
+          0;
+
+      int received = 0;
+
+      await videoResponse.data!.stream.listen(
+            (chunk) {
+          received += chunk.length;
+          videoSink.add(chunk);
+
+          if (total > 0) {
+            setState(() {
+              _downloadProgress = received / total;
+            });
+          }
+        },
+        cancelOnError: true,
+      ).asFuture();
+
+      await videoSink.close();
+      String? subtitlePath;
+
+      if (widget.video!.videoSubtitle != null &&
+          widget.video!.videoSubtitle!.isNotEmpty) {
+        final subtitleUrl = widget.video!.videoSubtitle!.first.filePath;
+
+        subtitlePath = '${dir.path}/${widget.video!.id}.vtt';
+
+        final subtitleResponse = await dio.get<String>(
+          subtitleUrl!,
+          options: Options(responseType: ResponseType.plain),
+        );
+
+        await File(subtitlePath).writeAsString(subtitleResponse.data ?? '');
+      }
+
+      widget.video!
+        ..localPath = videoPath
+        ..localSubtitlePath = subtitlePath;
+
+      await _downloadManager.addDownload(widget.video!, videoPath);
+
+      setState(() {
+        _isDownloading = false;
+        _downloadProgress = 0.0;
+      });
+
+      CommonMethods.showCustomSnackBar(
+        context: context,
+        text: "Video downloaded successfully",
+      );
+    } catch (e) {
+      setState(() => _isDownloading = false);
+      debugPrint('Download error: $e');
     }
   }
+
+
 
   void _deleteDownloadedVideo(Video video) {
     showDialog(
@@ -444,17 +614,20 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
           child: Container(
             height: 220,
             margin: EdgeInsets.symmetric(horizontal: 30),
-            padding: EdgeInsets.symmetric(horizontal: 20) + EdgeInsets.only(top: 20,bottom: 0),
+            padding:
+                EdgeInsets.symmetric(horizontal: 20) +
+                EdgeInsets.only(top: 20, bottom: 0),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(2),
               color: Colors.white,
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Important message',
                   style: CommonStyle.getRalewayFont(
-                    fontSize: 24,
+                    fontSize: 22,
                     color: Colors.black,
                     fontWeight: FontWeight.w500,
                   ),
@@ -462,7 +635,11 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
                 SizedBox(height: 20),
                 Text(
                   'Are you sure you want to delete this video from your downloads?',
-                  style: CommonStyle.getRalewayFont(fontSize: 20,color: Colors.black38,fontWeight: FontWeight.w400),
+                  style: CommonStyle.getRalewayFont(
+                    fontSize: 18,
+                    color: Colors.black38,
+                    fontWeight: FontWeight.w400,
+                  ),
                   textAlign: TextAlign.start,
                 ),
                 SizedBox(height: 20),
@@ -489,7 +666,10 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
                           _isDownloaded = false;
                         });
                         Navigation.pop(context);
-                        Fluttertoast.showToast(msg: "Video deleted successfully");
+                        CommonMethods.showCustomSnackBar(
+                          context: context,
+                          text: "Video deleted successfully",
+                        );
                       },
                       child: Text(
                         'DELETE',
@@ -505,7 +685,6 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
             ),
           ),
         );
-
       },
     );
   }
@@ -611,19 +790,22 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
                           child: LinearProgressIndicator(
                             value: _downloadProgress,
                             backgroundColor: Colors.white.withOpacity(0.3),
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                             minHeight: 8,
                           ),
                         ),
                         SizedBox(height: 10),
                         CustomButton(
-                          text:'Downloading - ${(_downloadProgress * 100).toInt()}%',
-                          icon: Icon(
-                            _downloadManager.isDownloaded(widget.video?.id)
-                                ? Icons.check_box_outlined
-                                : Icons.file_download_outlined,
-                            color: Colors.white,
-                          ),
+                          text:
+                              'Downloading - ${(_downloadProgress * 100).toInt()}%',
+                          // icon: Image.asset(
+                          //   _downloadManager.isDownloaded(widget.video?.id)
+                          //       ? LocalImages.downloaded
+                          //       :  LocalImages.download,
+                          //   color: Colors.white,
+                          // ),
                         ),
                       ],
                     )
@@ -632,10 +814,10 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
                       text: _downloadManager.isDownloaded(widget.video?.id)
                           ? "Downloaded"
                           : "Download",
-                      icon: Icon(
+                      icon: Image.asset(
                         _downloadManager.isDownloaded(widget.video?.id)
-                            ? Icons.check_box_outlined
-                            : Icons.file_download_outlined,
+                            ? LocalImages.downloaded
+                            : LocalImages.download,
                         color: Colors.white,
                       ),
                       onTap: _downloadManager.isDownloaded(widget.video?.id)
@@ -749,16 +931,22 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
                   Expanded(
                     child: GestureDetector(
                       behavior: HitTestBehavior.translucent,
-                      onTap: _toggleControls,
-                      onDoubleTap: _skipBackward,
+                      onTap: () {
+                        _toggleControls();
+                        setFSState(() {});
+                      },
+                      // onDoubleTap: _skipBackward,
                       child: Container(color: Colors.transparent),
                     ),
                   ),
                   Expanded(
                     child: GestureDetector(
                       behavior: HitTestBehavior.translucent,
-                      onTap: _toggleControls,
-                      onDoubleTap: _skipForward,
+                      onTap: () {
+                        _toggleControls();
+                        setFSState(() {});
+                      },
+                      // onDoubleTap: _skipForward,
                       child: Container(color: Colors.transparent),
                     ),
                   ),
@@ -854,7 +1042,10 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
                 bottom: 100,
                 child: Center(
                   child: GestureDetector(
-                    onTap: _togglePlayPause,
+                    onTap: () {
+                      _togglePlayPause();
+                      setFSState(() {});
+                    },
                     child: Container(
                       width: 80,
                       height: 80,
@@ -888,151 +1079,152 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
                 right: 0,
                 bottom: 0,
                 child: Container(
-                  constraints: BoxConstraints(maxHeight: 120),
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  constraints: BoxConstraints(maxHeight: 100),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: SafeArea(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Row(
                           children: [
                             // Time display
-                            IgnorePointer(
-                              child: Flexible(
-                                flex: 2,
-                                child: Text(
-                                  '${_formatDuration(_videoController!.value.position)} / ${_formatDuration(_videoController!.value.duration)}',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                            Text(
+                              '${_formatDuration(_videoController!.value.position)} / ${_formatDuration(_videoController!.value.duration)}',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                             Spacer(),
-                            GestureDetector(
-                              onTap: () {
-                                _toggleMute();
-                                setFSState(() {});
-                              },
-                              child: Container(
-                                padding: EdgeInsets.all(8),
-                                child: Icon(
-                                  _isMuted ? Icons.volume_off : Icons.volume_up,
-                                  color: Colors.white,
-                                  size: 24,
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    _toggleMute();
+                                    setFSState(() {});
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.all(8),
+                                    child: Icon(
+                                      _isMuted ? Icons.volume_off : Icons.volume_up,
+                                      color: Colors.white,
+                                      size: 24,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            // Exit fullscreen button
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.pop(context);
-                              },
-                              child: Container(
-                                padding: EdgeInsets.all(8),
-                                child: Icon(
-                                  Icons.fullscreen_exit,
-                                  color: Colors.white,
-                                  size: 24,
+                                // Exit fullscreen button
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.all(8),
+                                    child: Icon(
+                                      Icons.fullscreen_exit,
+                                      color: Colors.white,
+                                      size: 24,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            SizedBox(
-                              width: 36,
-                              height: 36,
-                              child: PopupMenuButton<int>(
-                                padding: EdgeInsets.zero,
-                                color: Colors.black87,
-                                icon: Icon(
-                                  Icons.more_vert,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
+                                PopupMenuButton<int>(
+                                  padding: EdgeInsets.zero,
+                                  color: Colors.black87,
+                                  icon: Icon(
+                                    Icons.more_vert,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
                                 onSelected: (value) {
                                   if (value == 1) {
                                     _toggleSubtitles();
                                     setFSState(() {});
                                   }
                                 },
-                                itemBuilder: (context) => [
-                                  PopupMenuItem<int>(
-                                    value: 1,
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Padding(
-                                          padding: EdgeInsets.only(top: 2),
-                                          child: Icon(
-                                            Icons.closed_caption,
-                                            color: Colors.white,
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem<int>(
+                                      value: 1,
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding: EdgeInsets.only(top: 2),
+                                            child: Icon(
+                                              Icons.closed_caption,
+                                              color: Colors.white,
+                                            ),
                                           ),
-                                        ),
-                                        SizedBox(width: 10),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(
-                                                'Captions',
-                                                style: TextStyle(
-                                                  color: Colors.white,
+                                          SizedBox(width: 10),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  'Captions',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                  ),
                                                 ),
-                                              ),
-                                              SizedBox(height: 2),
-                                              Text(
-                                                _captionStatusText,
-                                                style: TextStyle(
-                                                  color: Colors.white70,
-                                                  fontSize: 12,
+                                                SizedBox(height: 2),
+                                                Text(
+                                                  _captionStatusText,
+                                                  style: TextStyle(
+                                                    color: Colors.white70,
+                                                    fontSize: 12,
+                                                  ),
                                                 ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        SizedBox(height: 12),
-                        SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            activeTrackColor: Colors.white,
-                            inactiveTrackColor: Colors.white.withOpacity(0.3),
-                            thumbColor: Colors.white,
-                            thumbShape: RoundSliderThumbShape(
-                              enabledThumbRadius: 8,
+                        const SizedBox(height: 8),
+                        Container(
+                          height: 24,
+                          child: SliderTheme(
+                            data: SliderTheme.of(context).copyWith(
+                              activeTrackColor: Colors.white,
+                              inactiveTrackColor: Colors.white.withOpacity(0.3),
+                              thumbColor: Colors.white,
+                              thumbShape: RoundSliderThumbShape(
+                                enabledThumbRadius: 6,
+                              ),
+                              trackHeight: 3,
+                              overlayShape: RoundSliderOverlayShape(
+                                overlayRadius: 12,
+                              ),
                             ),
-                            trackHeight: 4,
-                            overlayShape: RoundSliderOverlayShape(
-                              overlayRadius: 16,
+                            child: Slider(
+                              value: _videoController!
+                                  .value
+                                  .position
+                                  .inMilliseconds
+                                  .toDouble()
+                                  .clamp(
+                                    0.0,
+                                    _videoController!
+                                        .value
+                                        .duration
+                                        .inMilliseconds
+                                        .toDouble(),
+                                  ),
+                              min: 0.0,
+                              max: _videoController!.value.duration.inMilliseconds
+                                  .toDouble(),
+                              onChanged: (v) {},
                             ),
-                          ),
-                          child: Slider(
-                            value: _videoController!
-                                .value
-                                .position
-                                .inMilliseconds
-                                .toDouble(),
-                            min: 0.0,
-                            max: _videoController!.value.duration.inMilliseconds
-                                .toDouble(),
-                            onChanged: (value) {
-                              _videoController!.seekTo(
-                                Duration(milliseconds: value.round()),
-                              );
-                            },
                           ),
                         ),
                       ],
@@ -1145,7 +1337,7 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
                         child: GestureDetector(
                           behavior: HitTestBehavior.translucent,
                           onTap: _toggleControls,
-                          onDoubleTap: _skipBackward,
+                          // onDoubleTap: _skipBackward,
                           child: Container(color: Colors.transparent),
                         ),
                       ),
@@ -1153,7 +1345,7 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
                         child: GestureDetector(
                           behavior: HitTestBehavior.translucent,
                           onTap: _toggleControls,
-                          onDoubleTap: _skipForward,
+                          // onDoubleTap: _skipForward,
                           child: Container(color: Colors.transparent),
                         ),
                       ),
@@ -1329,8 +1521,7 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
                                     ),
 
                                     GestureDetector(
-                                      onTap:
-                                          _toggleFullScreen,
+                                      onTap: _toggleFullScreen,
                                       child: Container(
                                         width: 36,
                                         height: 36,
@@ -1437,18 +1628,22 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
                                     .value
                                     .position
                                     .inMilliseconds
-                                    .toDouble(),
+                                    .toDouble()
+                                    .clamp(
+                                      0.0,
+                                      _videoController!
+                                          .value
+                                          .duration
+                                          .inMilliseconds
+                                          .toDouble(),
+                                    ),
                                 min: 0.0,
                                 max: _videoController!
                                     .value
                                     .duration
                                     .inMilliseconds
                                     .toDouble(),
-                                onChanged: (value) {
-                                  _videoController!.seekTo(
-                                    Duration(milliseconds: value.round()),
-                                  );
-                                },
+                                onChanged: (v) {},
                               ),
                             ),
                           ),
@@ -1477,9 +1672,228 @@ class _StartTrainingScreenState extends State<StartTrainingScreen> {
       ),
     );
   }
+
+  bool _isPermissionDialogOpen = false;
+
+  void permissionDialog() {
+    if (_isPermissionDialogOpen) return;
+
+    _isPermissionDialogOpen = true;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Center(
+          child: Container(
+            height: 230,
+            margin: EdgeInsets.symmetric(horizontal: 30),
+            padding:
+                EdgeInsets.symmetric(horizontal: 20) +
+                EdgeInsets.only(top: 20, bottom: 0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(2),
+              color: Colors.white,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Important message',
+                  style: CommonStyle.getRalewayFont(
+                    fontSize: 22,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'In order to download the file on your device, Marine Media required storage permission',
+                  style: CommonStyle.getRalewayFont(
+                    fontSize: 18,
+                    color: Colors.black38,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  textAlign: TextAlign.start,
+                ),
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        _isPermissionDialogOpen = false;
+                        Navigation.pop(context);
+                      },
+                      child: Text(
+                        'DENY',
+                        style: CommonStyle.getRalewayFont(
+                          fontSize: 16,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 6),
+                    TextButton(
+                      onPressed: () async {
+                        _isPermissionDialogOpen = false;
+                        Navigation.pop(context);
+                        await requestStoragePermission();
+                      },
+                      child: Text(
+                        'AGREE',
+                        style: CommonStyle.getRalewayFont(
+                          fontSize: 16,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<bool> isAndroid13OrAbove() async {
+    final androidInfo = await DeviceInfoPlugin().androidInfo;
+    return androidInfo.version.sdkInt >= 33;
+  }
+
+  Future<void> requestStoragePermission() async {
+    try {
+      if (Platform.isAndroid) {
+        if (await isAndroid13OrAbove()) {
+          final statuses = await [
+            Permission.photos,
+            Permission.videos,
+          ].request();
+
+          if (statuses[Permission.photos]?.isGranted == true ||
+              statuses[Permission.videos]?.isGranted == true) {
+            _onPermissionGranted();
+          } else if (statuses.values.any((e) => e.isPermanentlyDenied)) {
+            showSettingsDialog();
+          } else {
+            _onPermissionDenied();
+          }
+        } else {
+          final status = await Permission.storage.request();
+          _handlePermissionStatus(status);
+        }
+      }
+    } catch (_) {
+      CommonMethods.showCustomSnackBar(
+        context: context,
+        text: "Permission error",
+      );
+    }
+  }
+
+  void _handlePermissionStatus(PermissionStatus status) {
+    if (status.isGranted) {
+      _onPermissionGranted();
+    } else if (status.isPermanentlyDenied) {
+      showSettingsDialog();
+    } else {
+      _onPermissionDenied();
+    }
+  }
+
+  void _onPermissionGranted() {
+    if (mounted) {
+      CommonMethods.showCustomSnackBar(
+        context: context,
+        text: "Permission granted successfully",
+      );
+      _startDownload();
+    }
+  }
+
+  void _onPermissionDenied() {
+    if (mounted) {
+      CommonMethods.showCustomSnackBar(
+        context: context,
+        text: "Permission is required to download files",
+      );
+    }
+  }
+
+
+  void showSettingsDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Permission Required'),
+          content: Text(
+            'Storage permission is required to download files. Please enable it in app settings.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await openAppSettings();
+                _checkPermissionAfterSettings();
+              },
+              child: Text('Open Settings'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _checkPermissionAfterSettings() async {
+    await Future.delayed(Duration(milliseconds: 500));
+
+    bool hasPermission = await checkStoragePermission();
+
+    if (hasPermission) {
+      CommonMethods.showCustomSnackBar(
+        context: context,
+        text: "Permission granted! Starting download...",
+      );
+      _startDownload();
+    } else {
+      CommonMethods.showCustomSnackBar(
+        context: context,
+        text: "Permission still not granted",
+      );
+    }
+  }
+
+  Future<bool> checkStoragePermission() async {
+    try {
+      if (Platform.isAndroid) {
+        if (await isAndroid13OrAbove()) {
+          final photosStatus = await Permission.photos.status;
+          final videosStatus = await Permission.videos.status;
+          return photosStatus.isGranted || videosStatus.isGranted;
+        } else {
+          final status = await Permission.storage.status;
+          return status.isGranted;
+        }
+      } else if (Platform.isIOS) {
+        final status = await Permission.photos.status;
+        return status.isGranted;
+      }
+      return false;
+    } catch (e) {
+      print('Error checking storage permission: $e');
+      return false;
+    }
+  }
 }
 
-// Subtitle Cue Model
 class SubtitleCue {
   final Duration startTime;
   final Duration endTime;
