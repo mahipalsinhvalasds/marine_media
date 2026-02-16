@@ -38,6 +38,8 @@ class Video {
   String? image;
   String? status;
   List<VideoSubtitle>? videoSubtitle;
+  String? localPath;
+  String? localSubtitlePath;
 
   Video(
       {this.id,
@@ -52,7 +54,9 @@ class Video {
         this.url,
         this.image,
         this.status,
-        this.videoSubtitle});
+        this.videoSubtitle,
+        this.localPath,
+        this.localSubtitlePath});
 
   Video.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -67,12 +71,14 @@ class Video {
     url = json['url'];
     image = json['image'];
     status = json['status'];
+    localSubtitlePath = json['localSubtitlePath'];
     if (json['video_subtitle'] != null) {
       videoSubtitle = <VideoSubtitle>[];
       json['video_subtitle'].forEach((v) {
         videoSubtitle!.add(new VideoSubtitle.fromJson(v));
       });
     }
+    localPath = json['localPath'];
   }
 
   Map<String, dynamic> toJson() {
@@ -89,6 +95,8 @@ class Video {
     data['url'] = this.url;
     data['image'] = this.image;
     data['status'] = this.status;
+    data['localPath'] = localPath;
+    data['localSubtitlePath'] = localSubtitlePath;
     if (this.videoSubtitle != null) {
       data['video_subtitle'] =
           this.videoSubtitle!.map((v) => v.toJson()).toList();

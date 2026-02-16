@@ -32,7 +32,7 @@ class _ViewAllTrainingScreenState extends State<ViewAllTrainingScreen> {
           widget.data?.category ?? "",
           style: CommonStyle.getRalewayFont(
             fontSize: 22,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
           ),
         ),
         centerTitle: true,

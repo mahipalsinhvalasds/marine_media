@@ -7,4 +7,9 @@ class ApiParameters {
   static const String selectedAnswer = "selected_answer";
   static const String answer = "answer";
   static const String ans = "ans";
+  static const String oldPassword = "old_password";
+  static const String newPassword = "current_password";
+  static const String confirmNewPassword = "password_confirmation";
+  static const String otp = "otp";
+  static const String verifyToken = "verify_token";
 }

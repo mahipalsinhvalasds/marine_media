@@ -4,6 +4,7 @@ import 'package:marine_media_enterprises/screens/add_to_training/common_model.da
 import 'package:marine_media_enterprises/screens/my_training/my_training_api.dart';
 import 'package:marine_media_enterprises/service/api_service/api_service.dart';
 import 'package:marine_media_enterprises/service/api_service/api_url.dart';
+import 'package:marine_media_enterprises/utils/common_methods/common_methods.dart';
 
 import 'my_training_model.dart';
 
@@ -58,14 +59,23 @@ class MyTrainingViewModel with ChangeNotifier {
 
       if (response.status == true) {
         getTrainingDetails(0);
-        Fluttertoast.showToast(msg: response.message ?? "Deleted Successfully");
+        CommonMethods.showCustomSnackBar(
+          context: context!,
+          text: response.message ?? "Deleted Successfully",
+        );
       } else {
         print("No data found");
-        Fluttertoast.showToast(msg: response.message ?? "error on delete training");
+        CommonMethods.showCustomSnackBar(
+          context: context!,
+          text: response.message ?? "error on delete training",
+        );
       }
     } catch (e) {
       print('Error deleting training: $e');
-      Fluttertoast.showToast(msg: "error: ${e.toString()}");
+      CommonMethods.showCustomSnackBar(
+        context: context!,
+        text: "error: ${e.toString()}",
+      );
     } finally {
       setLoading(false);
       notifyListeners();

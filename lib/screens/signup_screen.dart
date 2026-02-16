@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:marine_media_enterprises/core/navigator/navigation.dart';
 import 'package:marine_media_enterprises/screens/login/login_screen.dart';
 import 'package:marine_media_enterprises/utils/app_colors/app_colors.dart';
-import 'package:marine_media_enterprises/utils/app_strings/app_strings.dart';
 import 'package:marine_media_enterprises/utils/local_images/local_images.dart';
 import 'package:marine_media_enterprises/utils/text_style/text_style.dart';
 import 'package:marine_media_enterprises/widget/custom_button.dart';
@@ -23,10 +22,32 @@ class _SignupScreenState extends State<SignupScreen> {
       body: Stack(
         children: [
           Image.asset(
-            LocalImages.backgroundImage,
+            LocalImages.splashBackgroundGif,
             fit: BoxFit.cover,
             height: MediaQuery.of(context).size.height,
             width: double.infinity,
+          ),
+          Container(
+            height: double.infinity,
+            width: double.infinity,
+            color: AppColors.backgroundColor.withOpacity(0.65),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.4,
+              decoration:  BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    AppColors.backgroundColor.withOpacity(0.0),
+                    AppColors.backgroundColor,
+                    AppColors.backgroundColor,
+                  ],
+                ),
+              ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 25),
@@ -37,9 +58,19 @@ class _SignupScreenState extends State<SignupScreen> {
                 Center(child: Image.asset(LocalImages.marineMediaLogo)),
                 Center(
                   child: Text(
-                    "Welcome To\nMerinemediaenterprises.com",
+                    "Welcome To",
                     style: CommonStyle.getRalewayFont(
                       fontSize: size.width * 0.07,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                Center(
+                  child: Text(
+                    "Marinemediaenterprises.com",
+                    style: CommonStyle.getRalewayFont(
+                      fontSize: size.width * 0.06,
                       fontWeight: FontWeight.w600,
                     ),
                     textAlign: TextAlign.center,

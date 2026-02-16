@@ -33,6 +33,7 @@ class CustomTextfield extends StatefulWidget {
     this.textColor,
     this.inputFormatters,
     this.textFieldHeight,
+    this.fontSize,
   });
 
   final String? hintText;
@@ -62,6 +63,7 @@ class CustomTextfield extends StatefulWidget {
   final Color? textColor;
   final List<TextInputFormatter>? inputFormatters;
   final double? textFieldHeight;
+  final double? fontSize;
 
   @override
   State<CustomTextfield> createState() => _CustomTextfieldState();
@@ -174,7 +176,7 @@ class _CustomTextfieldState extends State<CustomTextfield> {
                     ),
                   ),
                   style: CommonStyle.getRalewayFont(
-                    fontSize: 14,
+                    fontSize: widget.fontSize ?? 14,
                     fontWeight: FontWeight.w400,
                     color: widget.textColor ?? Colors.black,
                   ),

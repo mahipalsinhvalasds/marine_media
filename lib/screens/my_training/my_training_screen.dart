@@ -88,7 +88,7 @@ class _MyTrainingScreenState extends State<MyTrainingScreen> {
           "My Training",
           style: CommonStyle.getRalewayFont(
             fontSize: 22,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
           ),
         ),
         centerTitle: true,
@@ -301,7 +301,7 @@ class _MyTrainingScreenState extends State<MyTrainingScreen> {
                                           horizontal: 16,
                                         ),
                                         padding: EdgeInsets.symmetric(
-                                          horizontal: 20,
+                                          horizontal: 12,
                                           vertical: 8,
                                         ),
                                         decoration: BoxDecoration(
@@ -314,9 +314,11 @@ class _MyTrainingScreenState extends State<MyTrainingScreen> {
                                               onGoing?.category ?? "",
                                               style: CommonStyle.getRalewayFont(
                                                 color: Colors.black,
-                                                fontSize: 20,
+                                                fontSize: 18,
                                                 fontWeight: FontWeight.w600,
                                               ),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
                                             ),
                                             Padding(
                                               padding: const EdgeInsets.symmetric(
@@ -407,7 +409,54 @@ class _MyTrainingScreenState extends State<MyTrainingScreen> {
                                       Padding(
                                         padding: const EdgeInsets.only(right: 10),
                                         child: GestureDetector(
-                                          onTap: () {},
+                                          onTapDown: (TapDownDetails details) {
+                                            final Offset tapPosition = details.globalPosition;
+                                            showMenu(
+                                              context: context,
+                                              position: RelativeRect.fromLTRB(
+                                                tapPosition.dx - 80,
+                                                tapPosition.dy + 5,
+                                                MediaQuery.of(context).size.width - tapPosition.dx - 80,
+                                                MediaQuery.of(context).size.height - tapPosition.dy - 5,
+                                              ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              menuPadding: EdgeInsets.zero,
+                                              elevation: 8,
+                                              items: [
+                                                PopupMenuItem(
+                                                  value: 'remove',
+                                                  padding: EdgeInsets.zero,
+                                                  height: 30,
+                                                  child: GestureDetector(
+                                                    onTap: (){
+                                                      Navigation.pop(context);
+                                                      mViewModel?.deleteMyTraining(completed?.id ?? 0);
+                                                    },
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.delete_outline,
+                                                          color: Colors.black,
+                                                          size: 22,
+                                                        ),
+                                                        SizedBox(width: 12),
+                                                        Text(
+                                                          'Remove',
+                                                          style: CommonStyle.getRalewayFont(
+                                                            color: Colors.black,
+                                                            fontSize: 16,
+                                                            fontWeight: FontWeight.w300,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          },
                                           child: SizedBox(
                                             height: 24,
                                             width: 30,
@@ -419,49 +468,57 @@ class _MyTrainingScreenState extends State<MyTrainingScreen> {
                                           ),
                                         ),
                                       ),
-                                      Container(
-                                        width: double.infinity,
-                                        margin: EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                        ),
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 20,
-                                          vertical: 8,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(6),
-                                          color: Colors.white,
-                                        ),
-                                        child: Column(
-                                          children: [
-                                            Text(
-                                              completed?.category ?? "",
-                                              style: CommonStyle.getRalewayFont(
-                                                color: Colors.black,
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                            Padding(
-                                              padding: const EdgeInsets.symmetric(
-                                                vertical: 6,
-                                              ),
-                                              child: Text(
-                                                completed?.title ?? "",
+                                      GestureDetector(
+                                        onTap: (){
+                                          Navigation.push(
+                                            context,
+                                            StartTrainingScreen(video: completed,),
+                                          );
+                                        },
+                                        child: Container(
+                                          width: double.infinity,
+                                          margin: EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                          ),
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 20,
+                                            vertical: 8,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(6),
+                                            color: Colors.white,
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              Text(
+                                                completed?.category ?? "",
                                                 style: CommonStyle.getRalewayFont(
                                                   color: Colors.black,
-                                                  fontSize: 12,
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.w600,
                                                 ),
-                                                overflow: TextOverflow.ellipsis,
                                               ),
-                                            ),
-                                            SizedBox(height: 10),
-                                            Icon(
-                                              Icons.check_circle,
-                                              size: 30,
-                                              color: Colors.green,
-                                            ),
-                                          ],
+                                              Padding(
+                                                padding: const EdgeInsets.symmetric(
+                                                  vertical: 6,
+                                                ),
+                                                child: Text(
+                                                  completed?.title ?? "",
+                                                  style: CommonStyle.getRalewayFont(
+                                                    color: Colors.black,
+                                                    fontSize: 12,
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              SizedBox(height: 10),
+                                              Icon(
+                                                Icons.check_circle,
+                                                size: 30,
+                                                color: Colors.green,
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ],

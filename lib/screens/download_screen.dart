@@ -51,7 +51,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
         title: Text(
           "Downloads",
           style: CommonStyle.getRalewayFont(
-            fontSize: 24,
+            fontSize: 22,
             fontWeight: FontWeight.w600,
           ),
         ),

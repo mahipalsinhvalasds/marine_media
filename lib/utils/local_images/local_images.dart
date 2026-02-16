@@ -11,5 +11,11 @@ class LocalImages {
   static const String trainingImage = 'assets/images/training_image.jpeg';
   static const String trainingImage2 = 'assets/images/training_image2.jpg';
   static const String searchBlue = 'assets/images/search_blue.png';
+  static const String download = 'assets/images/download.png';
+  static const String downloaded = 'assets/images/downloaded.png';
+
+
+  static const String splashBackgroundGif = 'assets/gif/splash_background.gif';
+  static const String splashBackgroundVideoGif = 'assets/gif/splash_background_video.mp4';
 
 }
